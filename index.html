@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>معرض أعمالي - murtazaalseed-huemurtaza1998</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0d1117; color: #c9d1d9; padding: 40px 20px; }
+.container { max-width: 1100px; margin: 0 auto; }
+h1 { text-align: center; margin-bottom: 10px; color: #58a6ff; }
+.subtitle { text-align: center; color: #8b949e; margin-bottom: 40px; }
+.filters { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 30px; }
+.filters button { padding: 8px 16px; background: #21262d; border: 1px solid #30363d; color: #c9d1d9; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+.filters button:hover, .filters button.active { background: #58a6ff; border-color: #58a6ff; color: #0d1117; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+.card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; transition: 0.3s; display: flex; flex-direction: column; }
+.card:hover { transform: translateY(-5px); border-color: #58a6ff; }
+.card h3 { color: #58a6ff; margin-bottom: 10px; }
+.card p { color: #8b949e; font-size: 14px; margin-bottom: 15px; flex-grow: 1; }
+.lang { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; margin-bottom: 15px; font-weight: 600; }
+.stats { display: flex; gap: 15px; margin-bottom: 15px; font-size: 13px; color: #8b949e; }
+.btns { display: flex; gap: 8px; margin-top: auto; }
+.card a { display: inline-block; padding: 8px 16px; background: #238636; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; text-align: center; flex: 1; }
+.card a:hover { background: #2ea043; }
+.card a.demo { background: #1f6feb; }
+.card a.demo:hover { background: #388bfd; }
+.loading { text-align: center; padding: 60px; color: #8b949e; }
+@media(max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>معرض أعمالي</h1>
+  <p class="subtitle">مشاريعي على GitHub - تتحدث تلقائياً</p>
+  <div class="filters" id="filters"><button data-lang="all" class="active">الكل</button></div>
+  <div class="grid" id="repos"><div class="loading">جاري تحميل المشاريع...</div></div>
+</div>
+<script>
+const username = "murtazaalseed-huemurtaza1998";
+let allRepos = []; let languages = new Set(['all']);
+const langColors = {JavaScript:'#f1e05a',Python:'#3572A5',HTML:'#e34c26',CSS:'#563d7c',TypeScript:'#3178c6',PHP:'#4F5D95',Dart:'#00B4AB',Java:'#b07219','C++':'#f34b7d','C#':'#178600',Go:'#00ADD8',Vue:'#41b883',Svelte:'#ff3e00',Kotlin:'#A97BFF'};
+function showRepos(lang) {
+  const grid = document.getElementById('repos');
+  let filtered = lang === 'all' ? allRepos : allRepos.filter(r => r.language === lang);
+  if(filtered.length === 0) { grid.innerHTML = '<div class="loading">لا توجد مشاريع بهذا التصنيف</div>'; return; }
+  grid.innerHTML = filtered.map(repo => `
+    <div class="card">
+      <h3>${repo.name}</h3><p>${repo.description || 'بدون وصف'}</p>
+      <div class="stats"><span>⭐ ${repo.stargazers_count}</span><span>🍴 ${repo.forks_count}</span><span>📅 ${new Date(repo.updated_at).toLocaleDateString('ar-EG')}</span></div>
+      ${repo.language ? `<span class="lang" style="background:${langColors[repo.language] || '#21262d'}; color:${langColors[repo.language] ? '#0d1117' : '#c9d1d9'}">${repo.language}</span>` : ''}
+      <div class="btns"><a href="${repo.html_url}" target="_blank">عرض الكود</a>${repo.homepage ? `<a href="${repo.homepage}" target="_blank" class="demo">ديمو مباشر</a>` : ''}</div>
+    </div>`).join('');
+}
+function addFilterEvents() {
+  document.querySelectorAll('.filters button').forEach(btn => {
+    btn.onclick = () => { document.querySelectorAll('.filters button').forEach(b => b.classList.remove('active')); btn.classList.add('active'); showRepos(btn.dataset.lang); }
+  });
+}
+fetch(`https://api.github.com/users/${username}/repos?per_page=100&sort=updated`)
+.then(res => res.json()).then(data => {
+  if(data.message) { document.getElementById('repos').innerHTML = `<div class="loading">خطأ: ${data.message}</div>`; return; }
+  allRepos = data.filter(r => !r.fork && !r.private);
+  allRepos.forEach(r => { if(r.language) languages.add(r.language); });
+  const filterDiv = document.getElementById('filters');
+  languages.forEach(lang => { if(lang === 'all') return; filterDiv.innerHTML += `<button data-lang="${lang}">${lang}</button>`; });
+  showRepos('all'); addFilterEvents();
+}).catch(err => { document.getElementById('repos').innerHTML = `<div class="loading">خطأ بالاتصال: ${err}</div>`; });
+</script>
+</body>
+  </html>
